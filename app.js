@@ -60,7 +60,22 @@ app.post('/register',(req,res)=>{
         })
     })
     
-}) 
+})  
+//开始登录啦
+app.post('/login',(req,res)=>{
+    //获取表单中的数据
+    const userInfo = req.body
+    //执行sql语句,查询用户是否存在
+    const sql1='select*from user where username=? and password=?'
+    conn.query(sql1,[userInfo.username,userInfo.password],(err,result)=>{
+        //如果查询期间,执行sql语句失败,则认为登录失败!
+        if(err) return res.send({msg:'用户登录失败',status:501})
+        //如果查询期间的结果,记录条数不为1 则查询失败
+        if(result.length !==1)return res.send({msg:'用户登录失败',status:502})
+        //查询成功
+        res.send({msg:'ok',status:200})
+    })
+})
 
 app.listen(80,()=>{
     console.log('server running at http://127.0.0.1')

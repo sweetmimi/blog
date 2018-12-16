@@ -1,4 +1,14 @@
 const express = require('express')
+const mysql = require('mysql')
+const bodyParser=require('body-parser')
+const moment =require('moment')
+
+const conn=mysql.createConnection({
+    host:'127.0.0.1',
+    database:'blog',
+    user:'root',
+    password:'root'
+})
  
 const app = express()
 //静态资源托管 吧node_modules文件夹,托管为静态资源目录
@@ -9,10 +19,52 @@ app.set('views engine','ejs')
 
 app.set('views','./views')
 
-app.get('/',(req,res)=>{
-    res.render('index.ejs',{name:'zs'})
+ //注册解析表单数据的中间件
+ app.use(bodyParser.urlencoded({extended:false}))
+//用户请求的  主页
+app.get('/',(req,res)=>{ 
+    res.render('index.ejs',{}) 
 })
 
-app.listen(80,()=>{
+//用户请求的注册页面
+app.get('/register',(req,res)=>{
+    
+    res.render('./user/register.ejs',{})
+}) 
+
+//用户请求的登录页面
+app.get('/login',(req,res)=>{
+    res.render('./user/login.ejs',{})
+})
+//注册新用户
+app.post('/register',(req,res)=>{
+    //完成用户注册的业务逻辑
+    const body = req.body
+    //判断用户输入是否完整
+    if(body.username.trim().length<=0||body.password.trim().length<=0||body.nickname.trim().length<=0){
+        return res.send({msg:'请填写完成的数据后再注册'})
+    }
+    //查询用户名是否重复
+    const sql1 ='select count(*) as count from user where username=?'
+    conn.query(sql1,body.username,(err,result)=>{
+        //如果查询失败 返回客户端失败
+        if(err) return res.send({msg:'用户查询失败!',status:502})
+        console.log(result)
+        if(result[0].count !==0)return res.send({msg:'请更换其他用户名!',status:503})
+        // 添加ctime字段
+         userInfo.ctime = moment().format('YYYY-MM-DD HH:mm:ss')
+        //执行注册的业务逻辑
+        const sql2='insert into user set ?'
+        conn.query(sql2,body,(err,result)=>{
+            if (err) return res.status(500).send({ status: 500, msg: '注册失败!请重试!' })
+            // 让浏览器跳到登录页
+            // 302重定向
+            // res.redirect('/login') 
+        })
+    })
+    res.send({msg:'恭喜,注册成功!',status:200}) 
+}) 
+
+app.listen(81,()=>{
     console.log('server running at http://127.0.0.1')
 })

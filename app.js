@@ -2,8 +2,19 @@ const express = require('express')
 const bodyParser=require('body-parser')
 const fs = require('fs')
 const path =require('path')
-
 const app = express()
+//导入session中间件
+const session = require('express-session')
+
+//注册session中间件
+app.use(
+    session({
+        secret:'这是加密的秘钥',
+        resave:false,
+        saveUninitialized:false
+    })
+)
+
 //静态资源托管 吧node_modules文件夹,托管为静态资源目录
 app.use('/node_modules',express.static('./node_modules'))
  
